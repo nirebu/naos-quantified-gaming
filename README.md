@@ -1,5 +1,7 @@
 # quantified
 
+A little Vue JS frontend or the data provided by the Mionix Naos QG mouse through a websocket. Still very much work in progress.
+
 ## Project setup
 ```
 npm install
