@@ -1,28 +1,70 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <button v-if="connected === false" @click="connect">Start monitoring</button>
+    <button v-if="connected === true" @click="disconnect">Stop monitoring</button>
+    <p>Hand on mouse: {{ mouseTouched }}</p>
+    <p v-if="mouseTouched === true">
+      Heart rate sensor: {{ heartRateState }}
+      <span v-if="heartRateState === 'active'">
+        <br/>Heartrate: {{ heartRate }}
+      </span>
+    </p>
+    <p v-if="mouseTouched === true">
+      Galvanic skin response: {{ gsr }}
+    </p>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
 export default {
-  name: 'app',
-  components: {
-    HelloWorld
+  name: "app",
+  methods: {
+    connect() {
+      this.socket = new WebSocket("ws://localhost:7681", "mionix-beta");
+      this.socket ? (this.connected = true) : (this.connected = false);
+      let updatedBioraw, updatedBiometrics;
+      this.socket.onmessage = message => {
+        var data = JSON.parse(message.data);
+        if (data.type == "bioMetrics") {
+          updatedBiometrics = data;
+        } else if (data.type == "bioRaw") {
+          updatedBioraw = data;
+        // } else if (data.type == "mouseMetrics") {
+        //   this.$store.commit("updateMousemetrics", data);
+        }
+      };
+      setInterval(() => {
+        this.$store.commit("updateBiometrics", updatedBiometrics);
+        this.$store.commit("updateBioraw", updatedBioraw);
+      }, this.$store.getters.updateTick);
+      
+    },
+    disconnect() {
+      this.socket.close();
+      this.connected = false;
+    }
+  },
+  data() {
+    return {
+      connected: false
+    };
+  },
+  computed: {
+    mouseTouched() {
+      return this.$store.getters.bioraw.touch;
+    },
+    heartRate() {
+      return this.$store.getters.biometrics.heartRate;
+    },
+    heartRateState() {
+      return this.$store.getters.biometrics.heartRateState;
+    },
+    gsr() {
+      return this.$store.getters.biometrics.gsr;
+    }
   }
-}
+};
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 </style>
