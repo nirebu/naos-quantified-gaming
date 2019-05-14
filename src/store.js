@@ -13,7 +13,10 @@ export const store = new Vuex.Store({
     },
     biometrics: "",
     mousemetrics: "",
-    updateTick: 1000,
+    updateTick: 50,
+    maxDataPoints: 100,
+    heartRateHistory: [],
+    gsrHistory: [],
   },
   mutations: {
     updateBioraw(state, bioraw) {
@@ -21,6 +24,18 @@ export const store = new Vuex.Store({
     },
     updateBiometrics(state, biometrics) {
       state.biometrics = biometrics;
+    },
+    pushDataPoint(state, { gsrPoint , heartRatePoint }) {
+      if( state.heartRateHistory.length < state.maxDataPoints ) {
+        state.heartRateHistory.push( heartRatePoint );
+        state.gsrHistory.push( gsrPoint );
+      }
+      else {
+        state.heartRateHistory.shift();
+        state.heartRateHistory.push( heartRatePoint );
+        state.gsrHistory.shift();
+        state.gsrHistory.push( gsrPoint );
+      }
     },
     // updateMousemetrics(state, mousemetrics) {
     //   state.mousemetrics = mousemetrics;
@@ -30,6 +45,8 @@ export const store = new Vuex.Store({
     bioraw: state => state.bioraw,
     biometrics: state => state.biometrics,
     updateTick: state => state.updateTick,
+    heartRateHistory: state => state.heartRateHistory,
+    gsrHistory: state => state.gsrHistory,
     // mousemetrics: state => state.mousemetrics
   }
 });
